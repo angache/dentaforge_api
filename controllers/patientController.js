@@ -35,16 +35,25 @@ exports.getPatientWithNationalId = (req, res, next) => {
     res.status(200).json(doc);
   });
 };
-exports.queryPatient = (req, res, next) => {
+exports.queryPatient = async (req, res, next) => {
   const db = getDb();
-  const { nationalId, firstName, lastName, phoneNumber } = req.query;
+  const searchKey = req.body.search ? req.body.search[0].key : null;
+  const { skip, take } = req.body;
+  const query = searchKey ? { keywords: { $elemMatch: { $regex: searchKey, $options: 'i' } } } : {};
+  const res2 = await db.collection('patients').find(query).limit(take).skip(skip);
+  const result = await res2.toArray();
+  const count = await res2.count();
+  res.status(200).json({ result, count });
 
-  const query = {};
-  if (nationalId) {
-    query.name = /nationalId/;
-  }
+};
 
-  db.collection('patients').findOne(query).then(doc => {
+
+exports.createFakeData = (req, res, next) => {
+
+  const db = getDb();
+  const { nationalId } = req.query;
+  console.log(nationalId)
+  db.collection('patients').findOne({ idNumber: nationalId }).then(doc => {
     res.status(200).json(doc);
   });
 };

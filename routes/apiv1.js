@@ -14,5 +14,5 @@ router.post('/createpatient', patientController.createPatient);
 router.get('/getappointments', appointmentController.getAppointments);
 router.get('/getpatient', patientController.getPatient);
 router.get('/getpatientwithnationalid', patientController.getPatientWithNationalId);
-router.get('/querypatient', patientController.queryPatient);
+router.post('/querypatient', patientController.queryPatient);
 module.exports = router;

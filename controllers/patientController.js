@@ -37,12 +37,42 @@ exports.getPatientWithNationalId = (req, res, next) => {
 };
 exports.queryPatient = async (req, res, next) => {
   const db = getDb();
-  const searchKey = req.body.search ? req.body.search[0].key : null;
-  const { skip, take } = req.body;
-  const query = searchKey ? { keywords: { $elemMatch: { $regex: searchKey, $options: 'i' } } } : {};
-  const res2 = await db.collection('patients').find(query).limit(take).skip(skip);
-  const result = await res2.toArray();
-  const count = await res2.count();
+  // const searchKey = req.body.search ? req.body.search[0].key : null;
+  let { skip, take } = req.body;
+  console.log(req.body);
+  const filterQuery = [];
+  let searchQuery = {};
+
+  if (req.body.search) {
+    // const query = searchKey ? { keywords: { $elemMatch: { $regex: searchKey, $options: 'i' } } } : {};
+    searchQuery = searchQuery = {
+      keywords: { $elemMatch: { $regex: req.body.search.value, $options: 'i' } }
+    }
+  }
+
+  if (req.body.where) {
+    req.body.where.forEach(item => {
+
+      const newItem = {};
+      newItem[item.key] = { $regex: item.value, $options: 'i' };
+      filterQuery.push(newItem);
+    });
+  }
+  let sort = { firstName: 1 };
+  if (req.body.sorting) {
+    req.body.sorting.forEach(item => {
+      if (Object.keys(item).length > 0 && item.constructor === Object) {
+        const direction = item.direction === 'Ascending' ? 1 : -1;
+        sort = {};
+        sort[`${item.field}`] = direction;
+      }
+    })
+  }
+
+  const finalQuery = filterQuery && filterQuery.length > 0 ? { $and: filterQuery } : searchQuery;
+  const cursor = await db.collection('patients').find(finalQuery).limit(take).skip(skip).sort(sort);
+  const result = await cursor.toArray();
+  const count = await cursor.count();
   res.status(200).json({ result, count });
 
 };

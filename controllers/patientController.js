@@ -62,7 +62,7 @@ exports.queryPatient = async (req, res, next) => {
   if (req.body.sorting) {
     req.body.sorting.forEach(item => {
       if (Object.keys(item).length > 0 && item.constructor === Object) {
-        const direction = item.direction === 'Ascending' ? 1 : -1;
+        const direction = item.direction === 'Ascending' ? -1 : 1;
         sort = {};
         sort[`${item.field}`] = direction;
       }
